@@ -1,0 +1,17 @@
+.container {
+    position: relative;
+    max-width: 1000px;
+}
+
+.panel {
+    margin-top: 5%;
+    background-color: white;
+}
+
+.panel-heading h3 {
+    margin: 7px;
+}
+
+.panel-footer p {
+    margin: 0;
+}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Quản lí sinh viên</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/3.6.6/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Josefin+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="css/lab5.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/abc.css">
+    <link rel="stylesheet" href="css/abc.css.map">
+</head>
+
+<body ng-app="KApp">
+    <div class="area">
+        <ul class="circles">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
+    </div>
+    <div class="container" ng-controller="KCtrl">
+        <div class="panel panel-default  col-sm-6  col-sm-offset-3" style="padding: 0;">
+            <div class="panel-heading">
+                <div class="panel-title">
+                    <h3 href="#"><span class="glyphicon glyphicon-edit"></span> Quản lý sinh viên</h3>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form action="">
+                    <div class="form-group">
+                        <label for="">Hình :</label>
+                        <input type="file" class="form-control" id="file">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Họ và tên</label>
+                        <input type="text" class="form-control" ng-model="student.fullname">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Ngày sinh</label>
+                        <input type="text" class="form-control" ng-model="student.birthday">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Điểm</label>
+                        <input type="number" class="form-control" ng-model="student.mark">
+                    </div>
+                    <button type="button" class="btn btn-primary" ng-click="insert()" ng-show="index==-1"></span> Thêm</button>
+                    <button type="button" class="btn btn-success" ng-click="update()" ng-hide="index==-1"></span> Sửa</button>
+                    <button type="button" class="btn btn-danger" ng-click="delete()" ng-hide="index==-1"></span> Xóa</button>
+                    <button type="button" class="btn btn-warning" ng-click="cancel()"></span> Hủy</button>
+                    <button type="button" class="btn btn-info" ng-click="clear()"></span> Mới</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-sm-12" style="margin-bottom: 20px;">
+            <div class="table-users">
+                <div class="header">Danh sách sinh viên</div>
+                <table cellspacing="0">
+                    <tr>
+                        <th>Hình</th>
+                        <th>Họ và Tên</th>
+                        <th>Ngày sinh</th>
+                        <th>Điểm</th>
+                        <th>Xếp loại</th>
+                        <th width="120">Thao tác</th>
+                    </tr>
+                    <tr ng-repeat="st in students">
+                        <td><img src="https://firebasestorage.googleapis.com/v0/b/form-admin-52aac.appspot.com/o/images%2Fstudents%2F{{st.image}}?alt=media&token=27015a91-1e83-4b2b-8fd0-411c1d99306e" alt=""></td>
+                        <td>{{st.fullname}}</td>
+                        <td>{{st.birthday}}</td>
+                        <td>{{st.mark}}</td>
+                        <td>
+                            <span ng-if="st.mark<5">Yếu/Kém</span>
+                            <span ng-if="st.mark>=5 && st.mark<8">Trung bình/Khá</span>
+                            <span ng-if="st.mark>=8">Giỏi/Xuất sắc</span>
+                        </td>
+                        <td><button type="button" class="btn btn-primary" ng-click="edit($index)"></span>Sửa</button></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        var app = angular.module("KApp", ["firebase"]);
+        app.config(function() {
+            var config = {
+                apiKey: "AIzaSyAv_Ff3pmiSV2fYmkR89XoV-0u-DAMtpmo", // Your Firebase API key
+                authDomain: "form-admin-52aac.firebaseapp.com", // Your Firebase Auth domain ("*.firebaseapp.com")
+                databaseURL: "https://form-admin-52aac-default-rtdb.firebaseio.com/", // Your Firebase Database URL ("https://*.firebaseio.com")
+                storageBucket: "form-admin-52aac.appspot.com" // Your Cloud Storage for Firebase bucket ("*.appspot.com")
+            };
+            firebase.initializeApp(config);
+        });
+        app.controller("KCtrl", ["$scope", "$firebaseArray", "$firebaseStorage",
+            function($scope, $firebaseArray, $firebaseStorage) {
+                var ref = firebase.database().ref("students");
+                $scope.students = $firebaseArray(ref);
+                $scope.student = {};
+                $scope.index = -1;
+
+                $scope.clear = function() {
+                    $scope.student = {};
+                    document.getElementById("file").value = "";
+                    $scope.index = -1;
+                }
+                $scope.insert = function() {
+                    $scope.upload()
+                    setTimeout(() => {
+                        $scope.students.$add(angular.copy($scope.student))
+                        $scope.clear();
+                    }, 1000)
+
+                }
+                $scope.update = function() {
+                    $scope.upload()
+                    setTimeout(() => {
+                        $scope.students[$scope.index] = angular.copy($scope.student);
+                        $scope.students.$save($scope.index)
+                    }, 1000)
+
+                }
+                $scope.delete = function() {
+                    if (confirm("Bạn có muốn xóa không?") == true) {
+                        $scope.deleteImg();
+                        $scope.students.$remove($scope.index)
+                        $scope.clear();
+                        alert("Đã xóa")
+                    }
+
+                }
+                $scope.cancel = function() {
+                    if ($scope.index == -1) {
+                        $scope.clear();
+                    } else {
+                        $scope.edit($scope.index);
+                    }
+                }
+                $scope.edit = function(index) {
+                    $scope.index = index;
+                    $scope.student = angular.copy($scope.students[index]);
+                }
+
+                $scope.upload = function() {
+                    var input = document.getElementById("file");
+                    var file = input.files[0];
+                    if (file) {
+                        $scope.deleteImg();
+                        var name = Math.floor(Math.random() * 899999) + 100000;
+                        var storageRef = firebase.storage().ref("images/students/" + name);
+                        $scope.storage = $firebaseStorage(storageRef);
+
+                        var uploadTask = $scope.storage.$put(file, {
+                            contentType: "image/jpeg"
+                        });
+
+                        $scope.student.image = name;
+                        setTimeout(() => {
+                            $scope.storage.$getDownloadURL().then(function(url) {
+                                $scope.student.imageUrl = url;
+                            });
+                        }, 500)
+                    }
+                }
+
+                $scope.deleteImg = function() {
+                    if ($scope.student.image != undefined) {
+                        var storageRef = firebase.storage().ref("images/students/" + $scope.student.image);
+                        $scope.storage = $firebaseStorage(storageRef);
+                        $scope.storage.$delete().then(function() {
+                            console.log("successfully deleted!");
+                        })
+                    }
+                }
+            }
+
+        ]);
+    </script>
+</body>
+
+</html>
